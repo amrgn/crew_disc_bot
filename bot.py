@@ -40,7 +40,7 @@ class ReactionEmojis:
         curr_time = datetime.datetime.now()
         for usr_id in self.reactions:
             for emoji in self.reactions[usr_id]:
-                if self.reactions[usr_id][emoji] < curr_time:
+                if self.reactions[usr_id][emoji] is not None and self.reactions[usr_id][emoji] < curr_time:
                     self.reactions[usr_id][emoji] = None
     
     def get_reactions(self, usr_id):
