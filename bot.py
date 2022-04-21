@@ -76,9 +76,6 @@ class ReactionEmojis:
         self.save()
     
     def remove_all_reactions(self, usr_id: int):
-        if usr_id not in self.reactions:
-            return
-
         self.reactions[usr_id] = {}
         self.save()
 
@@ -146,7 +143,7 @@ def get_client():
         await client.process_commands(message)
 
     @client.command()
-    async def removereact(ctx, usr: str):
+    async def removereactions(ctx, usr: str):
         """
         Removes all reactions for a user
         """
@@ -154,7 +151,7 @@ def get_client():
 
         if usr_id is None:
             await client.delay_cmd.delay()
-            await ctx.send(f"Error, unable to find user {usr}. Use the tagged user as the only argument to this command. Example usage: !removereact <@966146137662820463>")
+            await ctx.send(f"Error, unable to find user {usr}. Use the tagged user as the only argument to this command. Example usage: !removereactions <@966146137662820463>")
             return
         
         if usr_id == ctx.author.id:
