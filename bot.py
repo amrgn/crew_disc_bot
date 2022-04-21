@@ -131,9 +131,14 @@ def get_client():
 
         if usr_id is None:
             await client.delay_cmd.delay()
-            await ctx.send(f"Error, unable to find user {usr}. Use the tagged user as the first argument to this command. Example usage: react <@966146137662820463> 😄 3")
+            await ctx.send(f"Error, unable to find user {usr}. Use the tagged user as the first argument to this command. Example usage: !react <@966146137662820463> 😄 3")
             return
         
+        if usr_id == ctx.author.id:
+            await client.delay_cmd.delay()
+            await ctx.send(f"Nice try, dumbass. You can't issue reactions for yourself.")
+            return
+
         try:
             client.reactions.add_reaction(usr_id, reaction, duration)
             await client.delay_cmd.delay()
