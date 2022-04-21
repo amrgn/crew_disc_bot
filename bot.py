@@ -74,6 +74,13 @@ class ReactionEmojis:
         self.reactions[usr_id][emoji] = datetime.datetime.now() + datetime.timedelta(days=duration)
 
         self.save()
+    
+    def remove_all_reactions(self, usr_id: int):
+        if usr_id not in self.reactions:
+            return
+
+        self.reactions[usr_id] = {}
+        self.save()
 
     def remove_old_reactions(self):
         curr_time = datetime.datetime.now()
@@ -138,6 +145,26 @@ def get_client():
 
         await client.process_commands(message)
 
+    @client.command()
+    async def removereact(ctx, usr: str):
+        """
+        Removes all reactions for a user
+        """
+        usr_id = get_id_from_tag(usr)
+
+        if usr_id is None:
+            await client.delay_cmd.delay()
+            await ctx.send(f"Error, unable to find user {usr}. Use the tagged user as the only argument to this command. Example usage: !removereact <@966146137662820463>")
+            return
+        
+        if usr_id == ctx.author.id:
+            await client.delay_cmd.delay()
+            await ctx.send(f"Nice try, dumbass. You can't remove your own reactions.")
+            return
+        
+        client.reactions.remove_all_reactions(usr_id)
+        await client.delay_cmd.delay()
+        await ctx.send(f"Removed all reactions for user {usr}")
 
     @client.command()
     async def react(ctx, usr: str, reaction: str, duration: int = 3):
