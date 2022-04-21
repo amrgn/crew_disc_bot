@@ -3,10 +3,12 @@ from dotenv import load_dotenv
 from discord.ext import commands
 import datetime
 
+import pickle
 import asyncio
 
 import discord
 
+from cfg import cfg
 from util import *
 
 class CustomBot(commands.Bot):
@@ -52,8 +54,13 @@ class ReactionEmojis:
     """
     MAX_DURATION = 14
 
-    def __init__(self):
+    def __init__(self, pickle_file):
         self.reactions = {}
+        self.pickle_file = pickle_file
+
+    def save(self):
+        with open(self.pickle_file, "wb") as f:
+            pickle.dump(self, f)
     
     def add_reaction(self, usr_id: int, emoji: str, duration: int):
         self.remove_old_reactions()
@@ -66,7 +73,8 @@ class ReactionEmojis:
         
         self.reactions[usr_id][emoji] = datetime.datetime.now() + datetime.timedelta(days=duration)
 
-    
+        self.save()
+
     def remove_old_reactions(self):
         curr_time = datetime.datetime.now()
         for usr_id in self.reactions:
@@ -81,6 +89,7 @@ class ReactionEmojis:
     
     def get_reactions(self, usr_id):
         self.remove_old_reactions()
+        self.save()
 
         if usr_id not in self.reactions:
             return []
@@ -91,12 +100,20 @@ def get_token():
     load_dotenv()
     return os.getenv("DISCORD_TOKEN")
 
+
+def get_reaction_emojis():
+    try:
+        with open(cfg["reactions_pickle_file"], "rb") as f:
+            return pickle.load(f)
+    except FileNotFoundError:
+        return ReactionEmojis(cfg["reactions_pickle_file"])
+
 def get_client():
     intents = discord.Intents.default()
     intents.messages = True
     intents.members = True
 
-    client = CustomBot(ReactionEmojis(), command_prefix="!", intents=intents)
+    client = CustomBot(get_reaction_emojis(), command_prefix="!", intents=intents)
 
     @client.event
     async def on_ready():
