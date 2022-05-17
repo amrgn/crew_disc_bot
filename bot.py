@@ -55,6 +55,7 @@ class ReactionEmojis:
     """
     MAX_DURATION = 14
     RAND_REACT_PROB = 0.05
+    RAND_REACT_DUR = 1 # day
 
     def __init__(self, pickle_file):
         self.reactions = {}
@@ -72,9 +73,10 @@ class ReactionEmojis:
         if random.random() < ReactionEmojis.RAND_REACT_PROB:
             curr_emojis = set(self.get_reactions(usr_id))
             possible_additions = self.used_emojis.difference(curr_emojis)
+            print(f"possible additions: {possible_additions}")
             if possible_additions:
                 emoji, *_ = random.sample(list(possible_additions), 1)
-                self.add_reaction(usr_id, emoji)
+                self.add_reaction(usr_id, emoji, ReactionEmojis.RAND_REACT_DUR)
 
     def add_reaction(self, usr_id: int, emoji: str, duration: int):
         self.remove_old_reactions()
