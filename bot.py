@@ -54,7 +54,7 @@ class ReactionEmojis:
     Holds reactions to be applied to messages for each user
     """
     MAX_DURATION = 14
-    RAND_REACT_PROB = 0.05
+    RAND_REACT_PROB = 0.1
     RAND_REACT_DUR = 1 # day
 
     def __init__(self, pickle_file):
@@ -77,6 +77,8 @@ class ReactionEmojis:
             if possible_additions:
                 emoji, *_ = random.sample(list(possible_additions), 1)
                 self.add_reaction(usr_id, emoji, ReactionEmojis.RAND_REACT_DUR)
+                return True
+        return False
 
     def add_reaction(self, usr_id: int, emoji: str, duration: int):
         self.remove_old_reactions()
@@ -159,7 +161,9 @@ def get_client():
                 pass
 
         if not message.author.bot:
-            client.reactions.add_random_reaction(usr_id)
+            if client.reactions.add_random_reaction(usr_id):
+                await client.delay_cmd.delay()
+                await message.channel.send(f"Oops, you got a new random reaction.")
 
         await client.process_commands(message)
 
