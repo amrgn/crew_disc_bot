@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from discord.ext import commands
 import datetime
+import random
 
 import pickle
 import asyncio
@@ -53,15 +54,28 @@ class ReactionEmojis:
     Holds reactions to be applied to messages for each user
     """
     MAX_DURATION = 14
+    RAND_REACT_PROB = 0.05
 
     def __init__(self, pickle_file):
         self.reactions = {}
         self.pickle_file = pickle_file
+        self.used_emojis = set() # a set of all emojis used (this is used to sample a random reaction)
 
     def save(self):
         with open(self.pickle_file, "wb") as f:
             pickle.dump(self, f)
     
+    def add_random_reaction(self, usr_id: int):
+        """
+        Adds random reaction to usr_id with probability ReactionEmojis.RAND_REACT_PROB.
+        """
+        if random.random() < ReactionEmojis.RAND_REACT_PROB:
+            curr_emojis = set(self.get_reactions(usr_id))
+            possible_additions = self.used_emojis.difference(curr_emojis)
+            if possible_additions:
+                emoji, *_ = random.sample(list(possible_additions), 1)
+                self.add_reaction(usr_id, emoji)
+
     def add_reaction(self, usr_id: int, emoji: str, duration: int):
         self.remove_old_reactions()
 
@@ -72,6 +86,9 @@ class ReactionEmojis:
             self.reactions[usr_id] = {}
         
         self.reactions[usr_id][emoji] = datetime.datetime.now() + datetime.timedelta(days=duration)
+
+        if emoji not in self.used_emojis:
+            self.used_emojis.add(emoji)
 
         self.save()
     
@@ -139,6 +156,8 @@ def get_client():
             except discord.HTTPException:
                 pass
 
+        if not message.author.bot:
+            client.reactions.add_random_reaction(usr_id)
 
         await client.process_commands(message)
 
